@@ -238,7 +238,7 @@ class Runner:
             full_url = seed_url + word + f"?q={word}"
             full_domain.append(full_url)
 
-            async with aiohttp.ClientSession() as session:
+        async with aiohttp.ClientSession() as session:
                 tasks = [Workers.AsyncWorker().scrape(session, url) for url in full_domain]
                 results = await asyncio.gather(*tasks)
                 return results
@@ -253,7 +253,6 @@ class Runner:
             full_domain.append(full_url)
 
         tasks = []
-
         for url in full_domain:
             target = Workers.ThreadedWorker()
             t = threading.Thread(target=target.scrape, args=(url,))
