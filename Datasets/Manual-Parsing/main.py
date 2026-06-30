@@ -232,7 +232,7 @@ class Runner:
     def __init__(self, runner=Config.runner):
         self.runner = runner
 
-    async def Asyncrunner(self):
+    async def Asyncrunner():
         seed_url = Config.seed_url
         words = load_words()
 
@@ -277,3 +277,5 @@ class Runner:
         logging.info(f"Scrapped {len(data)} words")
         logging.info("Processing...")
         ProcessnClassify.Apiprocessor(data)
+
+asyncio.run(Runner.Asyncrunner())
