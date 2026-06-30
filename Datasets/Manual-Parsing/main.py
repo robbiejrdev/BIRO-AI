@@ -29,12 +29,12 @@ logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(message)s"
 )
 
-logging.info("Starting Application")
+logging.info("[+]Starting Application")
 
 class Config:
     seed_url = "https://oxfordlearnersdictionaries.com/definition/english/"
     depth = 2
-    max_threads = 10
+    max_threads = 1000
     max_workers = 5
     semaphore = 10
     max_links = 3000
@@ -113,7 +113,7 @@ class Workers:
         def scrape(self, url):
             try:
                 r = requests.get(url, timeout=Config.timeout)
-                print(f"Visited {url}")
+                print(f"Scraped {url}")
 
                 fixed_data = {
                     "url": url,
@@ -143,7 +143,7 @@ class ProcessData:
         def __init__(self, data):
             self.data = data
 
-        def parser(self):
+        def parse(self):
             pattern = r'<span class="def"[^>]*>(.*?)</span>'
             matches = re.findall(pattern, self.data)
 
@@ -153,11 +153,8 @@ class ProcessData:
 
 
 class ProcessnClassify:
-    def __init__(self, df_dict_data, columns=Config.columns, output_file=Config.output_file, output_format=Config.output_format):
-        self.df_dict_data = df_dict_data
-        self.columns = columns
-        self.output_file = output_file
-        self.output_format = output_format
+    def __init__(self):
+        pass
 
     @staticmethod
     def Apiprocessor(data):
@@ -170,12 +167,11 @@ class ProcessnClassify:
 
         logging.info(f"Processed and saved {len(df)} rows")
 
-    def processor(self, df):
-        df = pd.DataFrame(self.df_dict_data, columns=self.columns)
+    def processor(self, dict_data):
+        df = pd.DataFrame(dict_data, columns=Config.columns)
         logging.info("Prepared the Dataset")
-
-        # To allow chaining
-        return self
+        logging.info(f"Dataset: {df.to_string}")
+        df.to_json("data.json", index=False)
 
     def store(self, df):
         if Config.output_format == "json":
@@ -189,8 +185,6 @@ class ProcessnClassify:
             logging.info(f"Saved to {Config.output_format}")
         else:
             logging.error(f"Cannot save with  this format {Config.output_format}")
-
-        return self
 
     # Pre-Train to test data quality
     def classify_data(self, df):
@@ -271,7 +265,24 @@ class Runner:
             data.append(res)
 
         logging.info(f"Scrapped {len(data)} words")
-        logging.info("Processing...")
-        ProcessnClassify.Apiprocessor(data)
 
-Runner().Threadingrunner()
+if __name__ == "__main__":
+    # Initialize main workflow
+    logging.info("[+]Scaping Data...")
+    data = Runner().ThreadingRunner()
+    logging.info("[+]Finished Scraping...")
+
+    dict_data = []
+    for d in data:
+        parsed = ProcessData.Bs4Parser(d["content"]).parse()
+        match = re.search(r'[?&]q=([^&]+)', d["url"])
+        if match:
+            word = match.group(1)
+        dict_data.append((word, parsed, d["url"]))
+
+    logging.info("[+]Processing Data into a dataset")
+    ProcessnClassify().processor(dict_data)
+
+    # Load saved data for classification 
+    df = pd.read_json("data.json")
+    ProcessnClassify().classify_data(df)
