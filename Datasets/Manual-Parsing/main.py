@@ -34,7 +34,7 @@ logging.info("[+]Starting Application")
 class Config:
     seed_url = "https://oxfordlearnersdictionaries.com/definition/english/"
     depth = 2
-    max_threads = 1000
+    max_threads = 100
     max_workers = 5
     semaphore = 10
     max_links = 3000
