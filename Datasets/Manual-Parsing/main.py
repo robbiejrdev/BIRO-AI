@@ -14,6 +14,7 @@ import csv
 import pandas as pd
 import numpy as np                                          
 import matplotlib.pyplot as plt
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression            
 from sklearn.model_selection import train_test_split
@@ -92,6 +93,7 @@ class Workers:
                     async with self.semaphore:
                         async with session.get(url) as response:
                             res = await response.text()
+                            print(f"Visited {url}")
 
                             fixed_data = {
                                     "url": url,
@@ -111,6 +113,7 @@ class Workers:
         def scrape(self, url):
             try:
                 r = requests.get(url, timeout=Config.timeout)
+                print(f"Visited {url}")
 
                 fixed_data = {
                     "url": url,
@@ -246,24 +249,17 @@ class Runner:
                 results = await asyncio.gather(*tasks)
                 return results
 
-    def Threadingrunner(self):
-        seed_url = Config.seed_url
+    def ThreadingRunner(self):
         words = load_words()
-
-        full_domain = []
-        for word in words:
-            full_url = seed_url + word + f"?q={word}"
-            full_domain.append(full_url)
-
-        tasks = []
-        for url in full_domain:
-            target = Workers.ThreadedWorker()
-            t = threading.Thread(target=target.scrape, args=(url,))
-            t.start()
-            tasks.append(t)
-
-        for t in tasks:
-            t.join()
+        full_domain = [Config.seed_url + w + f"?q={w}" for w in words]
+                    
+        results = []
+        with ThreadPoolExecutor(max_workers=Config.max_threads) as executor:
+            futures = [executor.submit(Workers.ThreadedWorker().scrape, url) for url in full_domain]
+            for future in as_completed(futures):
+                results.append(future.result()) # <-- collects return value
+                                                            
+        return results
 
     @staticmethod
     def ApiRunner():
@@ -278,4 +274,4 @@ class Runner:
         logging.info("Processing...")
         ProcessnClassify.Apiprocessor(data)
 
-asyncio.run(Runner.Asyncrunner())
+Runner().Threadingrunner()
