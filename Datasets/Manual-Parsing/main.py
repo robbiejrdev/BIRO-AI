@@ -127,23 +127,22 @@ class ProcessData:
         self.mode = mode
 
     class Bs4Parser:
-        def __init__(self, dict_data):
-            self.dict_data = dict_data
-            self.parser_type = parser_type
+        def __init__(self, data):
+            self.data = data
 
         def parse(self):
-            soup = BeautifulSoup(html_content, 'html.parser')
+            soup = BeautifulSoup(self.data, 'html.parser')
             definition_span = soup.find('span', class_='def')
             definition = definition_span.text.strip()
             return definition
 
     class RegexParser:
-        def __init__(self, dict_data):
-            self.dict_data = dict_data
+        def __init__(self, data):
+            self.data = data
 
         def parser(self):
             pattern = r'<span class="def"[^>]*>(.*?)</span>'
-            matches = re.findall(pattern, html_content)
+            matches = re.findall(pattern, self.data)
 
             definition =  matches[0]
 
