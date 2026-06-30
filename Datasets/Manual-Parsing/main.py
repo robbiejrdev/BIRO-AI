@@ -136,6 +136,8 @@ class ProcessData:
         def parse(self):
             soup = BeautifulSoup(self.data, 'html.parser')
             definition_span = soup.find('span', class_='def')
+            if definition_span is None:
+                return None
             definition = definition_span.text.strip()
             return definition
 
