@@ -1,7 +1,5 @@
 # C Chatbot Language Model
 
-This project lives in `robbiejr/personal-projects/TOOLKIT/llm` and trains a small chatbot-style language model written entirely in C.
-
 It is intentionally pragmatic:
 
 - The model is a token-level trigram language model with interpolated unigram, bigram, and trigram probabilities.
@@ -19,7 +17,7 @@ It is intentionally pragmatic:
 ## Build
 
 ```sh
-cd /data/data/com.termux/files/home/robbiejr/personal-projects/TOOLKIT/llm
+cd BIRO-AI/Tests/Test-1-c
 make
 ```
 
